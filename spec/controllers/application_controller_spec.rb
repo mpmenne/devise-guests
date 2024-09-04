@@ -23,6 +23,17 @@ describe ApplicationController, type: :controller do
     expect(@controller.current_or_guest_user).to eq(m)
   end
 
+  it "should use the guest user when a guest has already been created" do
+    email = @controller.send(:guest_email_authentication_key, 123)
+    allow(@mock_warden).to receive(:authenticate).with(anything).and_return(false)
+    allow(@controller).to receive(:session) { {guest_user_id: email} }
+    allow(User).to receive(:find_by).with(email:) { double(email:) }
+
+    expect(@controller).not_to receive(:create_guest_user)
+
+    expect(@controller.current_or_guest_user.email).to eq(email)
+  end
+
   it "should run the 'logging_in' callbacks" do
     # A user is logged in
     current_user = double
